@@ -56,8 +56,12 @@ def classical_parasari_drishti(
       - Mars additionally aspects the 4th and 8th.
       - Saturn additionally aspects the 3rd and 10th.
     Rahu and Ketu are excluded (they have no Parashari drishti).
-    Returns list of (aspecting_planet, target_sign_0based, "Drishti").
+    Returns list of (aspecting_planet, target_sign_0based, type_label) where
+    type_label names the drishti, e.g. "7th (full)" or "4th (special)".
+    (J6b, 2026-07-19: labels differentiated — previously every row said just
+    "Drishti", hiding which drishti it was.)
     """
+    _ORD = {3: "3rd", 4: "4th", 5: "5th", 7: "7th", 8: "8th", 9: "9th", 10: "10th"}
     rows: List[Tuple[str, int, str]] = []
     for planet, sign_idx in planet_sign_idx.items():
         if planet in _DRISHTI_EXCLUDE:
@@ -65,7 +69,8 @@ def classical_parasari_drishti(
         offsets = [7] + _EXTRA_ASPECTS.get(planet, [])
         for off in offsets:
             target_sign = (sign_idx + off - 1) % 12
-            rows.append((planet, target_sign, "Drishti"))
+            kind = "full" if off == 7 else "special"
+            rows.append((planet, target_sign, f"{_ORD[off]} ({kind})"))
     return rows
 
 

@@ -15,10 +15,13 @@ J3 report-quality revision (2026-07-19, see JYOTISH_FIDELITY_AUDIT_2026-07-19.md
 Provides:
   build_pdf_bytes(**kwargs) -> bytes
 """
+import datetime as _dt
 import io
 import logging
 import os
 import re
+
+APP_VERSION = "jyotish-panchang v12 (2026-07-19)"
 
 import matplotlib.pyplot as plt
 from reportlab.lib import colors
@@ -334,6 +337,32 @@ def build_pdf_bytes(
         a_rows = [["Antar Lord", "Start", "End", "Days"], ["-", "-", "-", "-"]]
     story.append(_table(a_rows, [4.0 * cm, 4.0 * cm, 4.0 * cm, 3.0 * cm]))
     story.append(Spacer(1, 0.2 * cm))
+
+    # Dasha position today (J6d, 2026-07-19)
+    try:
+        now = _dt.datetime.now(timeline[0]["start"].tzinfo)
+        cur_md = next((m for m in timeline if m["start"] <= now < m["end"]), None)
+        if cur_md is not None:
+            cur_antars = dasha_mod.antardasha_for_segment(
+                cur_md["lord"], cur_md["start"], cur_md["end"])
+            cur_ad = next((a for a in cur_antars
+                           if a["start"] <= now < a["end"]), None)
+            story.append(Paragraph(
+                f"Dasha position as of {now.strftime('%Y-%m-%d')}",
+                styles["Heading3"]))
+            pos_rows = [["Level", "Lord", "Start", "End"]]
+            pos_rows.append(["Mahadasha", _ascii_safe(cur_md["lord"]),
+                             cur_md["start"].strftime("%Y-%m-%d"),
+                             cur_md["end"].strftime("%Y-%m-%d")])
+            if cur_ad is not None:
+                pos_rows.append(["Antardasha", _ascii_safe(cur_ad["lord"]),
+                                 cur_ad["start"].strftime("%Y-%m-%d"),
+                                 cur_ad["end"].strftime("%Y-%m-%d")])
+            story.append(_table(pos_rows, [3.2 * cm, 3.2 * cm, 4.0 * cm, 4.0 * cm]))
+            story.append(Spacer(1, 0.2 * cm))
+    except Exception:
+        logger.exception("Current-dasha table build failed")
+
     story.append(PageBreak())
 
     # AI Analysis (J3: proper markdown rendering; internal spec removed from title)
@@ -371,10 +400,14 @@ def build_pdf_bytes(
         story.append(Paragraph("• " + _xml_escape(ln), styles["Small"]))
         story.append(Spacer(1, 0.06 * cm))
 
-    # Page-number footer
+    # Footer: page number + generation provenance (J6c)
+    gen_stamp = _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
+
     def _footer(canvas, doc):
         canvas.setFont(_BASE_FONT, 9)
         canvas.setFillColor(colors.grey)
+        canvas.drawString(1.6 * cm, 1.0 * cm,
+                          f"Generated {gen_stamp} · {APP_VERSION}")
         canvas.drawRightString(A4[0] - 1.5 * cm, 1.0 * cm, f"Page {doc.page}")
         canvas.setFillColor(colors.black)
 

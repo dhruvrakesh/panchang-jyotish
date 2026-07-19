@@ -72,6 +72,17 @@ def draw_north_chart(
 
     asc_sign = int((asc_deg % 360.0) // 30)
 
+    # ── Rasi numbers in each house cell (J6a, 2026-07-19) ───────────────────
+    # Whole-sign: display house idx contains rasi (asc_sign + idx) % 12;
+    # shown as the conventional 1-12 rasi number (1 = Mesha).
+    for idx in range(12):
+        x, y = _NI_POSITIONS[idx]
+        rasi_no = ((asc_sign + idx) % 12) + 1
+        nx = min(max(x + 0.085, 0.04), 0.96)
+        ny = min(max(y + 0.062, 0.04), 0.96)
+        ax.text(nx, ny, str(rasi_no), fontsize=8, ha="center", va="center",
+                color="0.45", style="italic")
+
     # ── Bucket planets into house cells ─────────────────────────────────────
     buckets: Dict[int, list] = defaultdict(list)
     for name_, vals in planets_dict.items():
@@ -84,10 +95,10 @@ def draw_north_chart(
             label = f"{label} {deg_in_sign:.0f}°"
         buckets[disp_index].append((deg_in_sign, label))
 
-    # ── Lagna marker ────────────────────────────────────────────────────────
+    # ── Lagna marker (with degree in rasi — J6a) ────────────────────────────
     asc_x, asc_y = _NI_POSITIONS[0]
-    ax.text(asc_x, asc_y, "Asc", fontsize=12, ha="center", va="center",
-            fontweight="bold")
+    ax.text(asc_x, asc_y, f"Asc {asc_deg % 30.0:.0f}\N{DEGREE SIGN}",
+            fontsize=11, ha="center", va="center", fontweight="bold")
 
     # ── Place labels, stacking vertically to avoid overlap ──────────────────
     for idx in range(12):
