@@ -1,0 +1,11 @@
+streamlit>=1.36
+pyswisseph>=2.10.3
+pytz>=2024.1
+timezonefinder>=6.2.0
+geopy>=2.4.1
+pandas>=2.2.2
+numpy>=1.26.4
+matplotlib>=3.8.4
+reportlab>=4.2.0
+openai>=1.40.0
+python-dotenv>=1.0.1
