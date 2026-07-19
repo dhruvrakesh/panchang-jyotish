@@ -265,17 +265,34 @@ with st.expander("Full Text Summary", expanded=True):
         st.write(f"**{label}:** {val}")
 
 # ── AI Analysis ────────────────────────────────────────────────────────────────
+# (J7, 2026-07-19: engine-aware selector — Gemini engines listed alongside
+#  OpenAI; selection is passed to run_analysis via JYOTISH_AI_ENGINE, which
+#  its routing already understands. Default follows the .env setting.)
 st.subheader("Vedic Jyotish Analysis")
-analysis_model = st.selectbox("Model", options=["gpt-4o-mini", "gpt-4o"],
-                               index=0, key="ai_model_sel")
+_ENGINE_OPTIONS = [
+    "gemini:gemini-2.5-pro",
+    "gemini:gemini-2.5-flash",
+    "openai:gpt-4o-mini",
+    "openai:gpt-4o",
+]
+_env_engine = (os.environ.get("JYOTISH_AI_ENGINE") or "").strip()
+_default_idx = _ENGINE_OPTIONS.index(_env_engine) if _env_engine in _ENGINE_OPTIONS else 1
+analysis_engine = st.selectbox("Engine", options=_ENGINE_OPTIONS,
+                               index=_default_idx, key="ai_engine_sel")
+analysis_model = analysis_engine.split(":", 1)[1]
+st.caption("Gemini engines use GEMINI_API_KEY; OpenAI engines use OPENAI_API_KEY. "
+           "Pro = deepest scholarly reading; Flash = fast & near-free.")
 analysis_style = st.selectbox("Tone",
                                options=["Classical (traditional)", "Clear & businesslike"],
                                index=0, key="ai_tone_sel")
 
 if st.button("Generate 300–500 word Analysis", key="ai_generate_btn"):
-    if client is None:
-        st.warning("No OpenAI key found. Add OPENAI_API_KEY or OPENAI_KEY to your .env, then restart.")
+    if analysis_engine.startswith("openai:") and client is None:
+        st.warning("OpenAI engine selected but no OPENAI_API_KEY / OPENAI_KEY in .env.")
+    elif analysis_engine.startswith("gemini:") and not os.environ.get("GEMINI_API_KEY"):
+        st.warning("Gemini engine selected but GEMINI_API_KEY missing from .env.")
     else:
+        os.environ["JYOTISH_AI_ENGINE"] = analysis_engine
         _jup_7_moon = (
             int((planets["Jupiter"]["lon"] % 360) // 30)
             - int((planets["Moon"]["lon"] % 360) // 30)
