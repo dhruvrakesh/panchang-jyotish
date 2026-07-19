@@ -9,7 +9,7 @@ import datetime as dt
 import pytz
 import pytest
 
-from jyotish.dasha import antardasha_for_segment, vimshottari_from_birth
+from jyotish.dasha import YEAR_DAYS, antardasha_for_segment, vimshottari_from_birth
 
 _IST  = pytz.timezone("Asia/Kolkata")
 _SPAN = 360.0 / 27.0        # nakshatra span in degrees
@@ -82,8 +82,12 @@ class TestVimshottariBalance:
 # ── antardasha_for_segment ─────────────────────────────────────────────────────
 
 class TestAntardasha:
+    # Fixture aligned to the module's YEAR_DAYS (365.25) on 2026-07-19 —
+    # see JYOTISH_FIDELITY_AUDIT_2026-07-19.md (D5). A full-length segment
+    # built with the same constant keeps the classical anchor-at-end
+    # antardasha layout numerically identical to the proportional one.
     _MD_START = _EPOCH
-    _MD_END   = _EPOCH + dt.timedelta(days=7 * 365.2425)   # Ketu Mahadasha
+    _MD_END   = _EPOCH + dt.timedelta(days=7 * YEAR_DAYS)   # Ketu Mahadasha
 
     def test_nine_sub_periods(self):
         result = antardasha_for_segment("Ketu", self._MD_START, self._MD_END)
@@ -116,7 +120,7 @@ class TestAntardasha:
         assert diff_s < 1.0, f"Last antardasha end off by {diff_s:.3f}s"
 
     def test_venus_mahadasha_starts_with_venus(self):
-        md_end = self._MD_START + dt.timedelta(days=20 * 365.2425)
+        md_end = self._MD_START + dt.timedelta(days=20 * YEAR_DAYS)
         result = antardasha_for_segment("Venus", self._MD_START, md_end)
         assert result[0]["lord"] == "Venus"
 
