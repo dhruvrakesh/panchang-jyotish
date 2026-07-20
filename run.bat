@@ -1,16 +1,20 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-title Jyotish Panchang — Launching...
+REM run.bat - Jyotish Panchang launcher (v12, 2026-07-20)
+REM Rewritten pure-ASCII with CRLF line endings: cmd.exe misparses LF-only
+REM batch files and executes line fragments ('rnet', '6.', '-m' errors).
+
+title Jyotish Panchang - Launching...
 cd /d "%~dp0"
 
 echo.
 echo  =========================================
-echo   Jyotish Panchang ^& Horoscope  v11
+echo   Jyotish Panchang ^& Horoscope  v12
 echo  =========================================
 echo.
 
-REM ── 1. Locate Python ──────────────────────────────────────────────────────────
+REM -- 1. Locate Python ------------------------------------------------------
 set PYTHON=
 if exist ".venv\Scripts\python.exe" (
     set PYTHON=.venv\Scripts\python.exe
@@ -24,7 +28,7 @@ for %%P in (py python3 python) do (
 echo [ERROR] Python not found. Install Python 3.10+ and add it to PATH.
 pause & exit /b 1
 
-REM ── 2. Create venv (first run only) ───────────────────────────────────────────
+REM -- 2. Create venv (first run only) ---------------------------------------
 :create_venv
 echo [SETUP] Creating virtual environment...
 %PYTHON% -m venv .venv
@@ -36,7 +40,7 @@ set PYTHON=.venv\Scripts\python.exe
 echo [SETUP] Virtual environment created.
 echo.
 
-REM ── 3. Check / install dependencies ───────────────────────────────────────────
+REM -- 3. Check / install dependencies ---------------------------------------
 :check_deps
 REM Re-install if requirements.txt is newer than the sentinel stamp file
 set STAMP=.venv\.deps_installed
@@ -56,7 +60,7 @@ if "%NEEDS_INSTALL%"=="1" (
     %PYTHON% -m pip install --upgrade pip setuptools wheel -q
     %PYTHON% -m pip install -r requirements.txt -q
     if errorlevel 1 (
-        echo [ERROR] Dependency installation failed. Check your internet connection.
+        echo [ERROR] Dependency installation failed. Check the network connection.
         pause & exit /b 1
     )
     echo. > "%STAMP%"
@@ -67,21 +71,17 @@ if "%NEEDS_INSTALL%"=="1" (
     echo.
 )
 
-REM ── 4. Verify app.py exists ────────────────────────────────────────────────────
+REM -- 4. Verify app.py exists -----------------------------------------------
 if not exist "app.py" (
     echo [ERROR] app.py not found in %CD%
     pause & exit /b 1
 )
 
-REM ── 5. Run tests (optional — comment out to skip) ─────────────────────────────
+REM -- 5. Run tests (optional - uncomment to enable) --------------------------
 REM echo [TEST] Running regression tests...
 REM %PYTHON% -m pytest tests\test_panchang.py tests\test_dasha.py -q --tb=short
-REM if errorlevel 1 (
-REM     echo [WARN] Some tests failed. App will still launch.
-REM     echo.
-REM )
 
-REM ── 6. Launch Streamlit ────────────────────────────────────────────────────────
+REM -- 6. Launch Streamlit ----------------------------------------------------
 echo [LAUNCH] Starting Streamlit on http://localhost:8501
 echo          Press Ctrl+C in this window to stop the server.
 echo.
